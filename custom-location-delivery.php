@@ -72,9 +72,9 @@ function cld_location_selector_popup($force = false) {
             <h2>Select Location</h2>
             <div class="cld-location-options">
                 <?php foreach($locations as $loc): ?>
-                    <div class="cld-location-option" data-pincode="<?php echo esc_attr($loc['pincode']); ?>" data-name="<?php echo esc_attr($loc['name']); ?>" style="text-align:<?php echo esc_attr($text_alignment); ?>;display:flex;flex-direction:<?php echo $icon_position==='beside'?'row':'column'; ?>;align-items:center;justify-content:center;gap:<?php echo $icon_position==='beside'?'10px':'0'; ?>;">
+                    <div class="cld-location-option" data-pincode="<?php echo esc_attr($loc['pincode']); ?>" data-name="<?php echo esc_attr($loc['name']); ?>" data-area="<?php echo esc_attr($loc['area']); ?>" style="text-align:<?php echo esc_attr($text_alignment); ?>;display:flex;flex-direction:<?php echo $icon_position==='beside'?'row':'column'; ?>;align-items:center;justify-content:center;gap:<?php echo $icon_position==='beside'?'10px':'0'; ?>;">
                         <?php if (!empty($loc['icon'])): ?><img src="<?php echo esc_url($loc['icon']); ?>" alt="<?php echo esc_attr($loc['name']); ?>" /><?php endif; ?>
-                        <div><?php echo esc_html($loc['name']); ?></div>
+                        <div><?php echo esc_html($loc['name']); ?><?php if (!empty($loc['area'])) echo ' <small>(' . esc_html($loc['area']) . ')</small>'; ?></div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -87,8 +87,10 @@ function cld_location_selector_popup($force = false) {
         $('.cld-location-option').on('click', function(){
             var name = $(this).data('name');
             var pincode = $(this).data('pincode');
+            var area = $(this).data('area');
             localStorage.setItem('cld_selected_location', name);
             localStorage.setItem('cld_selected_pincode', pincode);
+            localStorage.setItem('cld_selected_area', area);
             $(document).trigger('cld_location_changed', [name]);
             $('#cld-location-modal').hide();
             location.reload();
@@ -136,7 +138,9 @@ function cld_product_locations_meta_box($post) {
     if (!is_array($selected)) $selected = array();
     foreach($locations as $loc) {
         $checked = in_array($loc['name'], $selected) ? 'checked' : '';
-        echo '<label><input type="checkbox" name="cld_locations[]" value="'.esc_attr($loc['name']).'" '.$checked.'> '.esc_html($loc['name']).'</label><br>';
+        $label = esc_html($loc['name']);
+        if (!empty($loc['area'])) $label .= ' (' . esc_html($loc['area']) . ')';
+        echo '<label><input type="checkbox" name="cld_locations[]" value="'.esc_attr($loc['name']).'" '.$checked.'> '.$label.'</label><br>';
     }
 }
 add_action('save_post_product', function($post_id) {
@@ -152,7 +156,9 @@ add_action('dokan_new_product_after_product_tags', function() {
     $locations = get_option('cld_locations', array());
     echo '<div class="dokan-form-group"><label><strong>Available Locations</strong></label><br>';
     foreach($locations as $loc) {
-        echo '<label style="margin-right:10px;"><input type="checkbox" name="cld_locations[]" value="'.esc_attr($loc['name']).'"> '.esc_html($loc['name']).'</label>';
+        $label = esc_html($loc['name']);
+        if (!empty($loc['area'])) $label .= ' (' . esc_html($loc['area']) . ')';
+        echo '<label style="margin-right:10px;"><input type="checkbox" name="cld_locations[]" value="'.esc_attr($loc['name']).'"> '.$label.'</label>';
     }
     echo '</div>';
 });
@@ -163,7 +169,9 @@ add_action('dokan_product_edit_after_product_tags', function($post, $post_id) {
     echo '<div class="dokan-form-group"><label><strong>Available Locations</strong></label><br>';
     foreach($locations as $loc) {
         $checked = in_array($loc['name'], $selected) ? 'checked' : '';
-        echo '<label style="margin-right:10px;"><input type="checkbox" name="cld_locations[]" value="'.esc_attr($loc['name']).'" '.$checked.'> '.esc_html($loc['name']).'</label>';
+        $label = esc_html($loc['name']);
+        if (!empty($loc['area'])) $label .= ' (' . esc_html($loc['area']) . ')';
+        echo '<label style="margin-right:10px;"><input type="checkbox" name="cld_locations[]" value="'.esc_attr($loc['name']).'" '.$checked.'> '.$label.'</label>';
     }
     echo '</div>';
 }, 99, 2);

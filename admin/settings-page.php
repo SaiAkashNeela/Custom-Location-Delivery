@@ -34,8 +34,8 @@ function cld_render_settings_page() {
             <div style="background:#fff;padding:24px 32px 24px 24px;max-width:700px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                 <h2>How to Use Custom Location Delivery Plugin</h2>
                 <ol>
-                    <li><strong>Add Locations:</strong> Use the <b>Manage Locations</b> section to add cities/areas, pincodes, GPS coordinates, and upload icons.</li>
-                    <li><strong>Google Maps API:</strong> Enter your Google Maps API key to enable the "Detect My Location" feature in the modal.</li>
+                    <li><strong>Add Locations:</strong> Use the <b>Manage Locations</b> section to add cities/areas, pincodes, <b>optional area name</b>, and upload icons.</li>
+                    <li><strong>Google Maps API:</strong> Enter your Google Maps API key to enable the "Detect My Location" feature in the modal (matches by pincode only).</li>
                     <li><strong>Configure Modal Layout:</strong> Choose icon position and text alignment for the location selector modal.</li>
                     <li><strong>Enable Location Selector:</strong> Place the shortcode <code>[cld_location_selector]</code> on any page where you want users to select their delivery location. The modal will only appear on pages with this shortcode.</li>
                     <li><strong>Show Selected Location:</strong> Place the shortcode <code>[cld_selected_location]</code> anywhere (e.g., header) to display the currently selected location (e.g., "Deliver In Pune ▼").</li>
@@ -45,8 +45,8 @@ function cld_render_settings_page() {
                 <h3>Notes</h3>
                 <ul>
                     <li>The plugin only filters products and shows the modal on pages where <code>[cld_location_selector]</code> is used.</li>
-                    <li>"Detect My Location" uses the Google Maps API and browser GPS to match the user's pincode to your available locations.</li>
-                    <li>For best results, add both pincodes and GPS coordinates for each location.</li>
+                    <li>"Detect My Location" uses the Google Maps API and browser GPS to match the user's <b>pincode</b> to your available locations.</li>
+                    <li>For best results, add both pincodes and (optionally) area names for each location.</li>
                 </ul>
             </div>
         <?php else: ?>
@@ -78,7 +78,7 @@ function cld_render_settings_page() {
             <table class="form-table">
                 <tr><th>Name</th><td><input type="text" id="cld_new_location_name" /></td></tr>
                 <tr><th>Pincode</th><td><input type="text" id="cld_new_location_pincode" /></td></tr>
-                <tr><th>GPS (lat,lng)</th><td><input type="text" id="cld_new_location_gps" placeholder="18.5204,73.8567" /></td></tr>
+                <tr><th>Area Name (optional)</th><td><input type="text" id="cld_new_location_area" /></td></tr>
                 <tr><th>Icon</th><td><input type="button" class="button" id="cld_upload_icon_btn" value="Upload Icon" /> <input type="hidden" id="cld_new_location_icon" /><span id="cld_icon_preview"></span></td></tr>
             </table>
             <button type="button" class="button button-primary" id="cld_add_location_btn">Add Location</button>
@@ -96,12 +96,12 @@ function cld_render_locations_table() {
         echo '<p>No locations added yet.</p>';
         return;
     }
-    echo '<table class="widefat"><thead><tr><th>Name</th><th>Pincode</th><th>GPS</th><th>Icon</th><th>Action</th></tr></thead><tbody>';
+    echo '<table class="widefat"><thead><tr><th>Name</th><th>Pincode</th><th>Area Name</th><th>Icon</th><th>Action</th></tr></thead><tbody>';
     foreach ($locations as $i => $loc) {
         echo '<tr>';
         echo '<td>' . esc_html($loc['name']) . '</td>';
         echo '<td>' . esc_html($loc['pincode']) . '</td>';
-        echo '<td>' . esc_html($loc['gps']) . '</td>';
+        echo '<td>' . (!empty($loc['area']) ? esc_html($loc['area']) : '-') . '</td>';
         echo '<td>' . (!empty($loc['icon']) ? '<img src="' . esc_url($loc['icon']) . '" style="height:32px;" />' : '') . '</td>';
         echo '<td><button type="button" class="button cld-delete-location" data-index="' . $i . '">Delete</button></td>';
         echo '</tr>';
@@ -135,14 +135,14 @@ function cld_locations_admin_js() {
             e.preventDefault();
             var name = $('#cld_new_location_name').val();
             var pincode = $('#cld_new_location_pincode').val();
-            var gps = $('#cld_new_location_gps').val();
+            var area = $('#cld_new_location_area').val();
             var icon = $('#cld_new_location_icon').val();
-            if(!name || !pincode || !gps) { alert('Please fill all fields.'); return; }
+            if(!name || !pincode) { alert('Please fill all required fields.'); return; }
             var data = {
                 action: 'cld_add_location',
                 name: name,
                 pincode: pincode,
-                gps: gps,
+                area: area,
                 icon: icon,
                 _ajax_nonce: '<?php echo wp_create_nonce('cld_add_location'); ?>'
             };
@@ -182,7 +182,7 @@ add_action('wp_ajax_cld_add_location', function() {
     $locations[] = array(
         'name' => sanitize_text_field($_POST['name']),
         'pincode' => sanitize_text_field($_POST['pincode']),
-        'gps' => sanitize_text_field($_POST['gps']),
+        'area' => sanitize_text_field($_POST['area']),
         'icon' => esc_url_raw($_POST['icon'])
     );
     update_option('cld_locations', $locations);
