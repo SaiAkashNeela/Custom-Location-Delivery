@@ -3,7 +3,7 @@
 Plugin Name: Custom Location Delivery
 Description: WooCommerce plugin for location-based delivery selection, product filtering, and Dokan vendor support.
 Version: 1.0.0
-Author: Your Name
+Author: Sai Akash Neela
 */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
